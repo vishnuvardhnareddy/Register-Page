@@ -21,9 +21,7 @@ cloudinary.config({
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-const MONGODB_URI = "mongodb+srv://myUser:vishnu@cluster0.h30a7of.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-
-mongoose.connect(MONGODB_URI, {
+mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 }).then(() => console.log('MongoDB connected'))
@@ -52,13 +50,14 @@ const registrationSchema = new mongoose.Schema({
 
 const Registration = mongoose.model('Registration', registrationSchema);
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({ origin: process.env.NODE_ENV === "development" ? 'http://localhost:5173' : process.env.FRONTEND_URL, credentials: true }));
 app.use(express.json());
 
-// Upload + Save Registration
 app.post('/api/register', upload.single('resume'), async (req, res) => {
     try {
         const fileBuffer = req.file.buffer;
+        console.log("body", req.body);
+
 
         const uploadStream = cloudinary.uploader.upload_stream({ resource_type: 'raw' }, async (error, result) => {
             if (error) {
@@ -84,6 +83,6 @@ app.post('/api/register', upload.single('resume'), async (req, res) => {
     }
 });
 
-app.listen(port, () => {
+app.listen(port || 3000, () => {
     console.log(`Server running on port ${port}`);
 });
